@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Sign Reader {% block title %}
+    {% endblock title %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    {% load static %}
+
+    <link rel="stylesheet" type="text/css" media="screen" href="{% static 'css/bootstrap.css' %}">
+    <link rel="stylesheet" type="text/css" media="screen" href="{% static 'css/base.css' %}">
+    <script src="{% static 'js/jquery-3.3.1.js' %}"></script>
+    <script src="{% static 'js/bootstrap.js' %}"></script>
+    <script src="{% static 'js/popper.min.js' %}"></script>
+
+</head>
+<body style="margin: 0;
+    overflow: hidden;
+  ">
+    {% block content %}
+    {% endblock content %}
+</body>
+</html>

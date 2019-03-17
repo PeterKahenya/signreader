@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}
+-Read
+{% endblock title %}
+
+{% block content %}
+        <div class="bg-dark " style="position: absolute;width: 100%;height: 100%;left: 0;">
+            <div class="navbar bg-dark">
+                  <ul class="nav nav-pills nav-fill">
+                        <li class="nav-item">
+                          <h4 style="color:#cccccc;"><a style="font-size: 30px;font-weight: bolder;text-decoration: none;" href="/">Sign Reader</a>|Position your hand on the green box and sign!<span id="prediction" class="text-success"></span></h4>
+                        </li>
+                  </ul>
+                  <a href="/train/" class="btn btn-outline-primary">Tain</a>
+                  <a href="/add/" class="btn btn-primary">Add Gestures</a>
+            </div>
+
+            <div class="container" style="padding-left: 200px;padding-top: 10px;">  
+                <canvas width="800px" height="500px" id="output" style="background-color: #0069d9;"></canvas>
+            </div>   
+                {% csrf_token %}  
+            </div>
+
+<script>
+               var responsive_loaded=false;
+
+               function responsiveloaded() {
+                   responsive_loaded=true;
+               }
+
+
+                    
+
+
+                function opencvloaded() {
+                    var output = document.getElementById('output');
+                    var roi=document.createElement("canvas");
+                    var point1 = new cv.Point(400, 100); //opencv equivalent for last_mousex, last_mousey
+                    var point2 = new cv.Point(700, 400);
+                    var canvasx = $('#output').offset().left;//canvas distance from the left
+                    var canvasy = $('#output').offset().top;//canvas from the top
+                    
+                    function getArea() {
+                        var width = point2.x-point1.x;
+                        var height = point2.y-point1.y;
+                        
+                        return {
+                            "w": Math.abs(width) + 1,
+                            "h": Math.abs(height) + 1,
+                            "start":
+                            {
+                                "x": parseInt(point1.x),
+                                "y": parseInt(point1.y)
+                            }
+                        }
+                    }
+
+                    var camera = document.createElement("video");
+                    camera.setAttribute("width", output.width);
+                    camera.setAttribute("height", output.height);
+                    // Get a permission from user to use a camera.
+                    navigator.mediaDevices.getUserMedia({video: true, audio: false})
+                        .then(function(stream) {
+                        camera.srcObject = stream;
+                        camera.onloadedmetadata = function(e) {
+                            camera.play();
+                        };
+                    });
+                    //! [Open a camera stream]
+                    const FPS = 30;  // Target number of frames processed per second.
+                    var cap = new cv.VideoCapture(camera);
+                    var frame = new cv.Mat(camera.height, camera.width, cv.CV_8UC4);
+                    var frameBGR = new cv.Mat(camera.height, camera.width, cv.CV_8UC3);
+                    var frameGRAY = new cv.Mat(camera.height, camera.width, cv.CV_8UC3);
+                
+
+                    var area=getArea();
+                    console.log(area)
+                    function captureFrame() {
+                        var begin = Date.now();
+                        cap.read(frame);  // Read a frame from camera
+                        cv.flip(frame,frame,+1)
+                        cv.cvtColor(frame, frameBGR, cv.COLOR_RGBA2BGR);
+                        cv.cvtColor(frameBGR, frameGRAY, cv.COLOR_RGBA2GRAY, 0); 
+                       
+                        cv.rectangle(frame, point1, point2, [0, 105, 208, 255]);
+                        myroi = frame.roi(new cv.Rect(area.start.x, area.start.y, area.w, area.h));
+            
+                        cv.imshow(output, frame);
+                        cv.imshow(roi, myroi);
+                       
+                         
+                        
+                        
+                        var delay = 1000 / FPS - (Date.now() - begin);
+                        setTimeout(captureFrame, delay);
+                    }
+
+                    function send() {
+                        var img_data=roi.toDataURL('image/jpg');
+                         $.ajax({
+                            method: 'POST',
+                            url: window.location,
+                            async:true,
+                            data: {
+                                hand_roi: img_data,
+                                csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val()
+                            },
+                            success:function uploaded(data){
+                                if (data==="-1") {
+                                    console.log(data)
+                                    //get this code out of here
+                                    setTimeout(send,100);
+                                } else {
+                                    if (responsive_loaded) {
+                                        responsiveVoice.speak(data); 
+                                    }
+                                    document.getElementById("prediction").innerHTML=data
+                                    //get this code out of here
+                                    setTimeout(send,100);
+                                }
+                            }
+                            });
+                            
+                    }
+                    setTimeout(send,0);
+                    setTimeout(captureFrame, 0);
+                   
+            }
+</script>
+{% load static %}
+<script src="{% static 'js/responsive.js' %}" onload="responsiveloaded()"></script>
+<script src="{% static 'js/opencv.js' %}" onload="opencvloaded()"></script>
+{% endblock content %}
