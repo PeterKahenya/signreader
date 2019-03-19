@@ -7,8 +7,6 @@ from .context import get_classes
 from django.shortcuts import render,HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
-
-
 #commonly used variables and paths
 WORK_DIR=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_DIR=WORK_DIR+"/models/"
@@ -34,8 +32,8 @@ else:
 def detect_sign():
     sign=""
     if MODEL:
-        predict_batch=keras.preprocessing.image.ImageDataGenerator().flow_from_directory(PREDICT_DIR,target_size=(IMAGE_DIM,IMAGE_DIM),classes=CLASSES,batch_size=1)
-        train_batch=keras.preprocessing.image.ImageDataGenerator().flow_from_directory(TRAIN_DIR,target_size=(IMAGE_DIM,IMAGE_DIM),classes=CLASSES,batch_size=10)        
+        predict_batch=keras.preprocessing.image.ImageDataGenerator(rescale=1./255).flow_from_directory(PREDICT_DIR,target_size=(IMAGE_DIM,IMAGE_DIM),classes=CLASSES,batch_size=1)
+        train_batch=keras.preprocessing.image.ImageDataGenerator(rescale=1./255).flow_from_directory(TRAIN_DIR,target_size=(IMAGE_DIM,IMAGE_DIM),classes=CLASSES,batch_size=10)        
         predictions_array=MODEL.predict_generator(predict_batch,steps=1,verbose=0)    
 
         predicted_class_indices=np.argmax(predictions_array,axis=1)
@@ -45,6 +43,7 @@ def detect_sign():
         sign=prediction[0]
     else:
         sign="-1"
+    print(sign)
     return sign    
 
 
@@ -61,7 +60,7 @@ def index(request):
             hand_roi=hand_roi.replace("data:image/png;base64,","")
             img_data = base64.b64decode(hand_roi)
 
-            #save image
+            #save imag
             img_file = open(UPLOADED_FILE_URL, "wb+")
             img_file.write(img_data)
             img_file.close()
@@ -69,7 +68,8 @@ def index(request):
             #resize to desired size for the model
             img=cv2.imread(UPLOADED_FILE_URL)
             img_resized=cv2.resize(img,(IMAGE_DIM,IMAGE_DIM))
-            cv2.imwrite(UPLOADED_FILE_URL,img_resized)
+            orig_resized_gray=cv2.cvtColor(img_resized,cv2.COLOR_BGR2GRAY)
+            cv2.imwrite(UPLOADED_FILE_URL,orig_resized_gray)
 
             #detect sign
             sign=detect_sign()
