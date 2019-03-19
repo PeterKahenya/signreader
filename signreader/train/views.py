@@ -14,7 +14,7 @@ WORK_DIR=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRAIN_DIR=WORK_DIR+"/images/train/"
 VALIDATE_DIR=WORK_DIR+"/images/validate/"
 MODEL_DIR=WORK_DIR+"/models/"
-IMAGE_DIM=28
+IMAGE_DIM=32
 
 
 
