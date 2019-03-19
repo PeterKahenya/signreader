@@ -111,14 +111,14 @@
                                 if (data==="-1") {
                                     console.log(data)
                                     //get this code out of here
-                                    setTimeout(send,100);
+                                    setTimeout(send,1000);
                                 } else {
                                     if (responsive_loaded) {
                                         responsiveVoice.speak(data); 
                                     }
                                     document.getElementById("prediction").innerHTML=data
                                     //get this code out of here
-                                    setTimeout(send,100);
+                                    setTimeout(send,1000);
                                 }
                             }
                             });
