@@ -12,7 +12,7 @@ WORK_DIR=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_DIR=WORK_DIR+"/models/"
 TRAIN_DIR=WORK_DIR+"/images/train/"
 PREDICT_DIR=WORK_DIR+"/images/predict/"
-IMAGE_DIM=32
+IMAGE_DIM=112
 
 #on-time setups
 if not os.path.exists(PREDICT_DIR):

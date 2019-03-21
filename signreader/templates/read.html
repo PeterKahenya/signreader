@@ -9,7 +9,9 @@
             <div class="navbar bg-dark">
                   <ul class="nav nav-pills nav-fill">
                         <li class="nav-item">
-                          <h4 style="color:#cccccc;"><a style="font-size: 30px;font-weight: bolder;text-decoration: none;" href="/">Sign Reader</a>|Position your hand on the green box and sign!<span id="prediction" class="text-success"></span></h4>
+                          <h4 style="color:#cccccc;"><a style="font-size: 30px;font-weight: bolder;text-decoration: none;" href="/">
+                            Sign Reader</a>|Position your hand on the green box and sign!
+                            
                         </li>
                   </ul>
                   <a href="/train/" class="btn btn-outline-primary">Tain</a>
@@ -18,6 +20,17 @@
 
             <div class="container" style="padding-left: 200px;padding-top: 10px;">  
                 <canvas width="800px" height="500px" id="output" style="background-color: #0069d9;"></canvas>
+                <span 
+                        id="prediction" 
+                        style="position: absolute;
+                                background-color: #00000080;
+                                z-index: 1000; 
+                                width: 800px;
+                                left: 315px;
+                                top: 495px;
+                                font-size: 50px;
+                                text-align: center;" 
+                                        class="text-light"></span></h4>
             </div>   
                 {% csrf_token %}  
             </div>
@@ -111,14 +124,14 @@
                                 if (data==="-1") {
                                     console.log(data)
                                     //get this code out of here
-                                    setTimeout(send,1000);
+                                    setTimeout(send,2000);
                                 } else {
                                     if (responsive_loaded) {
                                         responsiveVoice.speak(data); 
                                     }
                                     document.getElementById("prediction").innerHTML=data
                                     //get this code out of here
-                                    setTimeout(send,1000);
+                                    setTimeout(send,2000);
                                 }
                             }
                             });

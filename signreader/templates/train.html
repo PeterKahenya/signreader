@@ -20,8 +20,15 @@
                                 <div class="row" sstyle="height:30%;width: 100%">
                                                 <h3 id="status" style="color: #cfe3f8">Model ready for training</h3>
                                 </div>
+                                <div class="row card">Number of classes: {{ count }}</div>
+                                <div class="row card">Number of images: {{ total }}</div>
+                                <div class="row card">
+                                {% for entry in class_counts %}
+                                       {{entry}}
+                                {% endfor %}
+                                </div>
                         <div class="row" sstyle="width: 100%">
-                                
+
                                 <button class="btn btn-outline-warning" onclick="train()">train</button>
                                 <form>
                                         {% csrf_token %}

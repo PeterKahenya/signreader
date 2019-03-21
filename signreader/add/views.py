@@ -7,7 +7,7 @@ from django.shortcuts import render,HttpResponse
 WORK_DIR=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRAIN_DIR=WORK_DIR+"/images/train/"
 VALIDATE_DIR=WORK_DIR+"/images/validate/"
-IMAGE_DIM=32
+IMAGE_DIM=112
 def index(request):
     if request.method=="GET":
         return render(request,"add.html",None,None)
