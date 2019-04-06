@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}
+-Add Gestures
+{% endblock title %}
+
+{% block content %}
+      <div class="bg-dark " style="position: absolute;width: 100%;height: 100%;left: 0;">
+            <div class="navbar bg-dark">
+                  <ul class="nav nav-pills nav-fill">
+                        <li class="nav-item">
+                          <h4 style="color:#cccccc;"><a style="font-size: 30px;font-weight: bolder;text-decoration: none;" href="/">Sign Reader</a>|Add Gestures Here</h4>
+                        </li>
+                  </ul>
+                  <a href="/train" class="btn btn-outline-primary">Train</a>
+                  <a href="/read" class="btn btn-primary">Read</a>
+            </div>
+
+      <div class="row" sstyle="height:100%;width: 100%">
+            <div class="col">
+                <div style="padding-left: 50px;padding-top: 10px;">
+                    <canvas width="800px" height="500px" id="output" style="background-color: transparent"></canvas>
+                </div>
+            </div>
+            <div class="col" style="left: 20px;padding-top: 100px;">
+                <canvas id="roi" width="80px" height="50px"></canvas>
+    
+                <div style="width:300px;">
+                    <form action="../add/" method="post">
+                        {% csrf_token %}
+                        <input type="text" name="word" id="word" class="form-control" placeholder="Enter the word">
+                        <br>
+                        <select name="data_choice" id="dataset_selection">
+                            <option value="train">Training</option>
+                            <option value="validate">Validation</option>
+                        </select>
+                        <br>
+                        <br>
+                        <input type="button" id="send" value="Add gesture" class="btn btn-primary">
+                        <input type="button" id="delete" value="Delete" class="btn btn-outline-warning">
+                    </form>
+                </div>
+            </div>
+        </div>
+
+</div>
+
+<script>
+      function opencvloaded() {
+        var canvas = document.getElementById('output');//shows the video
+        var roi = document.getElementById('roi');//region of interest
+        var canvasx = $(canvas).offset().left;//canvas distance from the left
+        var canvasy = $(canvas).offset().top;//canvas from the top
+        var last_mousex = last_mousey = 0;//last place where the mouse was down
+        var mousex = mousey = 0;//current position of the mouse
+        var mousedown = false;//has the mouse down been triggerd?
+        var point1 = new cv.Point(0, 0); //opencv equivalent for last_mousex, last_mousey
+        var point2 = new cv.Point(0, 0); //opencv equivalent for mousex, mousey
+        const FPS = 30;  // Target number of frames processed per second.
+        var camera = document.createElement("video");//create an anonymous video tag that isnt rendered to temporarily hold video stream
+        camera.setAttribute("width", canvas.width);//set width to match canvas
+        camera.setAttribute("height", canvas.height);//set width to match canvas
+
+        // Get a permission from user to use a camera.
+        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            .then(function (stream) {
+                camera.srcObject = stream;
+                camera.onloadedmetadata = function (e) {
+                    camera.play();
+                };
+            });
+
+        var cap = new cv.VideoCapture(camera);//open up the camera stream
+        var frame = new cv.Mat(camera.height, camera.width, cv.CV_8UC4);//current frame
+        let roi_selected = false;
+
+
+
+
+
+        $(canvas).on('mousedown', function (e) {
+            last_mousex = parseInt(e.clientX - canvasx);
+            last_mousey = parseInt(e.clientY - canvasy);
+            point1 = new cv.Point(last_mousex, last_mousey);
+            mousedown = true;
+            console.log("starting point: (" + last_mousex + "," + last_mousey + ")")
+        });
+
+
+
+
+
+        $(canvas).on('mouseup', function (e) {
+            x = parseInt(e.clientX - canvasx);
+            y = parseInt(e.clientY - canvasy);
+            mousedown = false;
+            console.log("ending point: (" + x + "," + y + ")")
+        });
+
+
+
+
+
+        $(canvas).on('mousemove', function (e) {
+            mousex = parseInt(e.clientX - canvasx);
+            mousey = parseInt(e.clientY - canvasy);
+            point2 = new cv.Point(mousex, mousey);
+
+        });
+
+        function getArea() {
+            width = mousex - last_mousex
+            height = mousey - last_mousey
+            startx = last_mousex;
+            starty = last_mousey;
+            if (width < 0) {
+                startx = mousex;
+            }
+            if (height < 0) {
+                starty = mousey;
+            }
+            return {
+                "w": Math.abs(width) + 1,
+                "h": Math.abs(height) + 1,
+                "start":
+                {
+                    "x": startx,
+                    "y": starty
+                }
+            }
+        }
+
+
+
+        function captureFrame() {
+            var begin = Date.now();//current time
+            cap.read(frame);  // Read a frame from camera
+            cv.flip(frame,frame,+1)
+            if (mousedown) {
+                cv.rectangle(frame, point1, point2, [0, 105, 208, 255]);
+                area = getArea();
+                var roi = document.getElementById("roi");
+                myroi = frame.roi(new cv.Rect(area.start.x, area.start.y, area.w, area.h));
+                //cv.resize(myroi,(50,80));
+                cv.imshow(roi, myroi);
+            }
+            cv.imshow(canvas, frame);
+            var delay = 1000 / FPS - (Date.now() - begin);
+            setTimeout(captureFrame, delay);
+        }
+
+
+         $("#send").on("click",(e)=>{
+             var img_data=roi.toDataURL('image/jpg');
+             var word=document.getElementById("word").value;
+             var dataset=document.getElementById("dataset_selection").value;
+             
+             console.log(JSON.stringify({
+                    hand_roi: img_data,
+                    word:word,
+                    dataset_choice:dataset,
+                    csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val()
+                }))
+
+             $.ajax({
+                method: 'POST',
+                url: '',
+                data: {
+                    hand_roi: img_data,
+                    word:word,
+                    dataset_choice:dataset,
+                    csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val()
+                },
+                success:function uploaded(data){
+                    console.log(data)
+                    location.reload();
+                }
+                });
+
+
+             }
+        ) 
+
+        $("#delete").on("click",(e)=>{
+             location.reload()
+
+
+             }
+        ) 
+
+
+        setTimeout(captureFrame, 0);
+
+
+    }
+
+</script>
+
+
+
+{% load static %}
+<script src="{% static 'js/opencv.js' %}" onload="opencvloaded()"></script>
+{% endblock content %}
