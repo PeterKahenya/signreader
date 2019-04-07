@@ -20,11 +20,12 @@
             <div class="col">
                 <div style="padding-left: 50px;padding-top: 10px;">
                     <canvas width="800px" height="500px" id="output" style="background-color: transparent"></canvas>
+                    <button type="button" name="button" id="grab">Grab</button>
                 </div>
             </div>
             <div class="col" style="left: 20px;padding-top: 100px;">
                 <canvas id="roi" width="80px" height="50px"></canvas>
-    
+
                 <div style="width:300px;">
                     <form action="../add/" method="post">
                         {% csrf_token %}
@@ -60,6 +61,7 @@
         var camera = document.createElement("video");//create an anonymous video tag that isnt rendered to temporarily hold video stream
         camera.setAttribute("width", canvas.width);//set width to match canvas
         camera.setAttribute("height", canvas.height);//set width to match canvas
+        var frame_grabbed=false;
 
         // Get a permission from user to use a camera.
         navigator.mediaDevices.getUserMedia({ video: true, audio: false })
@@ -144,17 +146,24 @@
                 //cv.resize(myroi,(50,80));
                 cv.imshow(roi, myroi);
             }
-            cv.imshow(canvas, frame);
+            if (!frame_grabbed) {
+              cv.imshow(canvas, frame);
+            }
             var delay = 1000 / FPS - (Date.now() - begin);
             setTimeout(captureFrame, delay);
         }
 
 
          $("#send").on("click",(e)=>{
-             var img_data=roi.toDataURL('image/jpg');
+             var img_data=null;
+             if (frame_grabbed) {
+                 img_data=output.toDataURL('image/jpg');
+             } else {
+                 img_data=roi.toDataURL('image/jpg');
+             }
              var word=document.getElementById("word").value;
              var dataset=document.getElementById("dataset_selection").value;
-             
+
              console.log(JSON.stringify({
                     hand_roi: img_data,
                     word:word,
@@ -179,15 +188,20 @@
 
 
              }
-        ) 
+        )
 
         $("#delete").on("click",(e)=>{
              location.reload()
 
 
              }
-        ) 
+        )
+        $("#grab").on("click",(e)=>{
+             frame_grabbed=true;
 
+
+             }
+)
 
         setTimeout(captureFrame, 0);
 

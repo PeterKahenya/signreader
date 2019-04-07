@@ -10,29 +10,29 @@
                   <ul class="nav nav-pills nav-fill">
                         <li class="nav-item">
                           <h4 style="color:#cccccc;"><a style="font-size: 30px;font-weight: bolder;text-decoration: none;" href="/">
-                            Sign Reader</a>|Position your hand on the green box and sign!
-                            
+                            Sign Reader</a>|Position your hand on the screen and sign!
+
                         </li>
                   </ul>
                   <a href="/train/" class="btn btn-outline-primary">Tain</a>
                   <a href="/add/" class="btn btn-primary">Add Gestures</a>
             </div>
 
-            <div class="container" style="padding-left: 200px;padding-top: 10px;">  
+            <div class="container" style="padding-left: 200px;padding-top: 10px;">
                 <canvas width="800px" height="500px" id="output" style="background-color: #0069d9;"></canvas>
-                <span 
-                        id="prediction" 
+                <span
+                        id="prediction"
                         style="position: absolute;
                                 background-color: #00000080;
-                                z-index: 1000; 
+                                z-index: 1000;
                                 width: 800px;
                                 left: 315px;
                                 top: 495px;
                                 font-size: 50px;
-                                text-align: center;" 
+                                text-align: center;"
                                         class="text-light"></span></h4>
-            </div>   
-                {% csrf_token %}  
+            </div>
+                {% csrf_token %}
             </div>
 
 <script>
@@ -43,7 +43,7 @@
                }
 
 
-                    
+
 
 
                 function opencvloaded() {
@@ -53,11 +53,11 @@
                     var point2 = new cv.Point(700, 400);
                     var canvasx = $('#output').offset().left;//canvas distance from the left
                     var canvasy = $('#output').offset().top;//canvas from the top
-                    
+
                     function getArea() {
                         var width = point2.x-point1.x;
                         var height = point2.y-point1.y;
-                        
+
                         return {
                             "w": Math.abs(width) + 1,
                             "h": Math.abs(height) + 1,
@@ -86,32 +86,32 @@
                     var frame = new cv.Mat(camera.height, camera.width, cv.CV_8UC4);
                     var frameBGR = new cv.Mat(camera.height, camera.width, cv.CV_8UC3);
                     var frameGRAY = new cv.Mat(camera.height, camera.width, cv.CV_8UC3);
-                
 
-                    var area=getArea();
-                    console.log(area)
+
+                    //var area=getArea();
+                    //console.log(area)
                     function captureFrame() {
                         var begin = Date.now();
                         cap.read(frame);  // Read a frame from camera
                         cv.flip(frame,frame,+1)
                         cv.cvtColor(frame, frameBGR, cv.COLOR_RGBA2BGR);
-                        cv.cvtColor(frameBGR, frameGRAY, cv.COLOR_RGBA2GRAY, 0); 
-                       
-                        cv.rectangle(frame, point1, point2, [0, 105, 208, 255]);
-                        myroi = frame.roi(new cv.Rect(area.start.x, area.start.y, area.w, area.h));
-            
+                        cv.cvtColor(frameBGR, frameGRAY, cv.COLOR_RGBA2GRAY, 0);
+
+                        //cv.rectangle(frame, point1, point2, [0, 105, 208, 255]);
+                        //myroi = frame.roi(new cv.Rect(area.start.x, area.start.y, area.w, area.h));
+
                         cv.imshow(output, frame);
-                        cv.imshow(roi, myroi);
-                       
-                         
-                        
-                        
+                        //cv.imshow(roi, myroi);
+
+
+
+
                         var delay = 1000 / FPS - (Date.now() - begin);
                         setTimeout(captureFrame, delay);
                     }
 
                     function send() {
-                        var img_data=roi.toDataURL('image/jpg');
+                        var img_data=output.toDataURL('image/jpg');
                          $.ajax({
                             method: 'POST',
                             url: window.location,
@@ -123,23 +123,21 @@
                             success:function uploaded(data){
                                 if (data==="-1") {
                                     console.log(data)
-                                    //get this code out of here
                                     setTimeout(send,2000);
                                 } else {
                                     if (responsive_loaded) {
-                                        responsiveVoice.speak(data); 
+                                        responsiveVoice.speak(data);
                                     }
                                     document.getElementById("prediction").innerHTML=data
-                                    //get this code out of here
                                     setTimeout(send,2000);
                                 }
                             }
                             });
-                            
+
                     }
                     setTimeout(send,0);
                     setTimeout(captureFrame, 0);
-                   
+
             }
 </script>
 {% load static %}

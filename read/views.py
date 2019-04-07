@@ -1,6 +1,7 @@
 import os
 import cv2
-import keras
+import tensorflow as tf
+import tensorflow.keras as keras
 import base64
 import numpy as np
 from .context import get_classes
@@ -9,20 +10,21 @@ from django.views.decorators.csrf import csrf_exempt
 
 #commonly used variables and paths
 WORK_DIR=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODEL_DIR=WORK_DIR+"/models/"
-TRAIN_DIR=WORK_DIR+"/images/train/"
-PREDICT_DIR=WORK_DIR+"/images/predict/"
-IMAGE_DIM=112
+MODEL_DIR=os.path.join(WORK_DIR,"models")
+
+TRAIN_DIR=os.path.join(os.path.join(WORK_DIR,"images"),"train")
+PREDICT_DIR=os.path.join(os.path.join(WORK_DIR,"images"),"predict")
+IMAGE_DIM=400
 
 #on-time setups
 if not os.path.exists(PREDICT_DIR):
     os.makedirs(PREDICT_DIR)
-    os.makedirs(PREDICT_DIR+"a/")
-UPLOADED_FILE_URL = PREDICT_DIR+"a/photo.jpg"
+    os.makedirs(os.path.join(PREDICT_DIR,"a"))
+UPLOADED_FILE_URL = os.path.join(os.path.join(PREDICT_DIR,"a"),"photo.jpg")
 CLASSES,CLASSES_COUNT=get_classes(TRAIN_DIR)
 
-if os.path.exists(MODEL_DIR+"model.hd5"):
-    MODEL=keras.models.load_model(MODEL_DIR+"model.hd5")
+if os.path.exists(os.path.join(MODEL_DIR,"model.hd5")):
+    MODEL=tf.keras.models.load_model(os.path.join(MODEL_DIR,"model.hd5"))
     print("model loaded...")
 else:
     MODEL=None
@@ -32,9 +34,9 @@ else:
 def detect_sign():
     sign=""
     if MODEL:
-        predict_batch=keras.preprocessing.image.ImageDataGenerator(rescale=1./255).flow_from_directory(PREDICT_DIR,target_size=(IMAGE_DIM,IMAGE_DIM),classes=CLASSES,batch_size=1)
-        train_batch=keras.preprocessing.image.ImageDataGenerator(rescale=1./255).flow_from_directory(TRAIN_DIR,target_size=(IMAGE_DIM,IMAGE_DIM),classes=CLASSES,batch_size=10)        
-        predictions_array=MODEL.predict_generator(predict_batch,steps=1,verbose=0)    
+        predict_batch=tf.keras.preprocessing.image.ImageDataGenerator(rescale=1./255).flow_from_directory(PREDICT_DIR,target_size=(IMAGE_DIM,IMAGE_DIM),classes=CLASSES,batch_size=1)
+        train_batch=tf.keras.preprocessing.image.ImageDataGenerator(rescale=1./255).flow_from_directory(TRAIN_DIR,target_size=(IMAGE_DIM,IMAGE_DIM),classes=CLASSES,batch_size=10)
+        predictions_array=MODEL.predict_generator(predict_batch,steps=1,verbose=0)
 
         predicted_class_indices=np.argmax(predictions_array,axis=1)
         labels = (train_batch.class_indices)
@@ -44,7 +46,7 @@ def detect_sign():
     else:
         sign="-1"
     print(sign)
-    return sign    
+    return sign
 
 
 
@@ -60,7 +62,7 @@ def index(request):
             hand_roi=hand_roi.replace("data:image/png;base64,","")
             img_data = base64.b64decode(hand_roi)
 
-            #save imag
+            #save image
             img_file = open(UPLOADED_FILE_URL, "wb+")
             img_file.write(img_data)
             img_file.close()
