@@ -1,12 +1,13 @@
 import os
 import cv2
-import tensorflow as tf
-import tensorflow.keras as keras
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import base64
 import numpy as np
 from .context import get_classes
 from django.shortcuts import render,HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+import codecs
 
 #commonly used variables and paths
 WORK_DIR=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -22,22 +23,22 @@ if not os.path.exists(PREDICT_DIR):
     os.makedirs(os.path.join(PREDICT_DIR,"a"))
 UPLOADED_FILE_URL = os.path.join(os.path.join(PREDICT_DIR,"a"),"photo.jpg")
 CLASSES,CLASSES_COUNT=get_classes(TRAIN_DIR)
-
+MODEL=None
 if os.path.exists(os.path.join(MODEL_DIR,"model.hd5")):
-    MODEL=tf.keras.models.load_model(os.path.join(MODEL_DIR,"model.hd5"))
-    print("model loaded...")
+	MODEL=load_model(os.path.join(MODEL_DIR,"model.hd5"))
+	print("model loaded...")
 else:
     MODEL=None
 
-
-
 def detect_sign():
+    prob=0.0
     sign=""
     if MODEL:
-        predict_batch=tf.keras.preprocessing.image.ImageDataGenerator(rescale=1./255).flow_from_directory(PREDICT_DIR,target_size=(IMAGE_DIM,IMAGE_DIM),classes=CLASSES,batch_size=1)
-        train_batch=tf.keras.preprocessing.image.ImageDataGenerator(rescale=1./255).flow_from_directory(TRAIN_DIR,target_size=(IMAGE_DIM,IMAGE_DIM),classes=CLASSES,batch_size=10)
-        predictions_array=MODEL.predict_generator(predict_batch,steps=1,verbose=0)
+        predict_batch=ImageDataGenerator(rescale=1./255).flow_from_directory(PREDICT_DIR,target_size=(IMAGE_DIM,IMAGE_DIM),classes=CLASSES,batch_size=1)
+        train_batch=ImageDataGenerator(rescale=1./255).flow_from_directory(TRAIN_DIR,target_size=(IMAGE_DIM,IMAGE_DIM),classes=CLASSES,batch_size=10)
 
+        predictions_array=MODEL.predict_generator(predict_batch,steps=1,verbose=0)
+        prob=max(predictions_array[0])
         predicted_class_indices=np.argmax(predictions_array,axis=1)
         labels = (train_batch.class_indices)
         labels = dict((v,k) for k,v in labels.items())
@@ -46,7 +47,7 @@ def detect_sign():
     else:
         sign="-1"
     print(sign)
-    return sign
+    return sign,prob
 
 
 
@@ -56,17 +57,20 @@ def index(request):
         return render(request,"read.html",None,None)
     else:
         if request.method=="POST":
-
             #decode image data
             hand_roi=request.POST['hand_roi']
             hand_roi=hand_roi.replace("data:image/png;base64,","")
-            img_data = base64.b64decode(hand_roi)
-
+            """ pad = len(hand_roi)%4
+            hand_roi += "="*(4-pad)
+            print(len(hand_roi)%4) """
+            
+            img_data=base64.b64decode(hand_roi)
+            
             #save image
             img_file = open(UPLOADED_FILE_URL, "wb+")
             img_file.write(img_data)
             img_file.close()
-
+            
             #resize to desired size for the model
             img=cv2.imread(UPLOADED_FILE_URL)
             img_resized=cv2.resize(img,(IMAGE_DIM,IMAGE_DIM))
@@ -74,7 +78,11 @@ def index(request):
             cv2.imwrite(UPLOADED_FILE_URL,orig_resized_gray)
 
             #detect sign
-            sign=detect_sign()
-            return HttpResponse(sign)
+            """
+            sign,prob=detect_sign()
+            print(prob)
+            """
+            return HttpResponse("sign+str(prob)")
+
         else:
             return HttpResponse("Method Not allowed!!")

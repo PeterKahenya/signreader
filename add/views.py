@@ -7,7 +7,7 @@ from django.shortcuts import render,HttpResponse
 WORK_DIR=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRAIN_DIR=os.path.join(os.path.join(WORK_DIR,"images"),"train")
 VALIDATE_DIR=os.path.join(os.path.join(WORK_DIR,"images"),"validate")
-IMAGE_DIM=400
+IMAGE_DIM=224
 def index(request):
     if request.method=="GET":
         return render(request,"add.html",None,None)
@@ -36,7 +36,7 @@ def index(request):
                 img=cv2.imread(uploaded_file_url)
                 resized_image=cv2.resize(img,(IMAGE_DIM,IMAGE_DIM))
                 resized_image_gray=cv2.cvtColor(resized_image,cv2.COLOR_BGR2GRAY)
-                cv2.imwrite(uploaded_file_url,resized_image_gray)
+                cv2.imwrite(uploaded_file_url,resized_image)
                 print(dataset+" gesture added for the letter :"+word)
                 return HttpResponse("ADDED")
         else:

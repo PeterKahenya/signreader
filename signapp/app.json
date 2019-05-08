@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "signapp",
-    "slug": "signapp-ke",
+    "slug": "signapp",
     "privacy": "public",
     "sdkVersion": "32.0.0",
     "platforms": [
