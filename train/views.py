@@ -1,64 +1,88 @@
 #import statements
 import os
 import cv2
-from django.shortcuts import render,HttpResponse
-from tensorflow.keras.optimizers import SGD,Adam
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout,Conv2D,MaxPooling2D,Flatten
 from .context import get_classes
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.models import Model
+from django.shortcuts import render,HttpResponse
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.applications.mobilenet import MobileNet,preprocess_input
+from tensorflow.keras.layers import Dense, Dropout,Conv2D,MaxPooling2D,Flatten
+
 
 #commonly used variables and paths
 WORK_DIR=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_DIR=os.path.join(WORK_DIR,"models")
 TRAIN_DIR=os.path.join(os.path.join(WORK_DIR,"images"),"train")
 VALIDATE_DIR=os.path.join(os.path.join(WORK_DIR,"images"),"validate")
-IMAGE_DIM=400
+image_gen=ImageDataGenerator(preprocessing_function=preprocess_input)
+IMAGE_DIM=224
 
 
-def create_and_train_model(images_count,train_batches=10):
-    batches_per_epoch=int(images_count/train_batches)
-    print(batches_per_epoch)
+def create_and_train_model(classes,classes_count,t_images_count,v_images_count,train_batches=10,validate_batches=10):
     #one-time setups for each training session
-    CLASSES,CLASSES_COUNT=get_classes(TRAIN_DIR)
-    if not os.path.exists(MODEL_DIR):
-        os.makedirs(MODEL_DIR)
-    train_batch=ImageDataGenerator(rescale=1./255).flow_from_directory(TRAIN_DIR,target_size=(IMAGE_DIM,IMAGE_DIM),classes=CLASSES,batch_size=1)
-    validate_batch=ImageDataGenerator(rescale=1./255).flow_from_directory(VALIDATE_DIR,target_size=(IMAGE_DIM,IMAGE_DIM),classes=CLASSES,batch_size=1)
+    t_batches_per_epoch=int(t_images_count/train_batches)
+    v_batches_per_epoch=int(v_images_count/validate_batches)    
+    train_batch=image_gen.flow_from_directory(TRAIN_DIR,target_size=(IMAGE_DIM,IMAGE_DIM),classes=classes,batch_size=train_batches)
+    validate_batch=image_gen.flow_from_directory(VALIDATE_DIR,target_size=(IMAGE_DIM,IMAGE_DIM),classes=classes,batch_size=validate_batches)
+    
 
-    model = Sequential()
-    model.add(Conv2D(64, (3, 3), activation='relu',input_shape=(IMAGE_DIM,IMAGE_DIM,3)))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Flatten())
-    model.add(Dense(100, activation='relu'))
-    model.add(Dense(CLASSES_COUNT, activation='softmax'))
+    mobile=MobileNet()
+    x=mobile.layers[-6].output
+    predictions=Dense(classes_count,activation='softmax')(x)
+    model=Model(inputs=mobile.input,outputs=predictions)
+    for layer in model.layers[:-23]:
+        layer.trainable=False
 
     #compile model using accuracy to measure model performance
     model.compile(optimizer=Adam(),loss='categorical_crossentropy',metrics=['accuracy'])
-    model.fit_generator(train_batch,steps_per_epoch=batches_per_epoch,validation_data=validate_batch,validation_steps=4,epochs=100,verbose=1)
+    model.fit_generator(train_batch,steps_per_epoch=t_batches_per_epoch,validation_data=validate_batch,validation_steps=v_batches_per_epoch,epochs=10,verbose=1)
+
 
     #save trained model
+    if not os.path.exists(MODEL_DIR):
+        os.makedirs(MODEL_DIR)
     model.save(os.path.join(MODEL_DIR,"model.hd5"))
-    return model
+
 
 def index(request):
-    total=0
-    CLASSES,CLASSES_COUNT=get_classes(TRAIN_DIR)
-    class_counts=[]
-    for word in CLASSES:
+
+    T_CLASSES,T_NUMBER_OF_CLASSES=get_classes(TRAIN_DIR)
+    t_total=0
+    t_no_of_images_per_class=[]
+    for word in T_CLASSES:
         word_dict={}
         word_path=os.path.join(TRAIN_DIR,word)
         count=len(os.listdir(word_path))
-        total=total+count
+        t_total=t_total+count
         word_dict[word]=count
-        class_counts.append(word_dict)
+        t_no_of_images_per_class.append(word_dict)
+    
+    V_CLASSES,V_NUMBER_OF_CLASSES=get_classes(VALIDATE_DIR)
+    v_total=0
+    v_no_of_images_per_class=[]
+    for word in V_CLASSES:
+        word_dict={}
+        word_path=os.path.join(VALIDATE_DIR,word)
+        count=len(os.listdir(word_path))
+        v_total=v_total+count
+        word_dict[word]=count
+        v_no_of_images_per_class.append(word_dict)
+
     if request.method=="GET":
 
-        return render(request,"train.html",{'count':CLASSES_COUNT,"class_counts":class_counts,"total":total},None)
+        return render(request,"train.html",{"t_no_of_classes":T_NUMBER_OF_CLASSES,
+                                            "t_no_of_images_per_class":t_no_of_images_per_class,
+                                            "t_total":t_total,
+                                            "v_no_of_classes":V_NUMBER_OF_CLASSES,
+                                            "v_no_of_images_per_class":v_no_of_images_per_class,
+                                            "v_total":v_total
+                                            },
+                                            None)
     else:
         if request.method=="POST":
 
-            model=create_and_train_model(images_count=total,train_batches=1)
+            create_and_train_model(classes=T_CLASSES,classes_count=T_NUMBER_OF_CLASSES,t_images_count=t_total,v_images_count=v_total,train_batches=1,validate_batches=1)
 
             return HttpResponse("model is trained")
         else:

@@ -26,12 +26,7 @@ export default class App extends React.Component {
       //console.log(this.camera.getAvailablePictureSizesAsync())
       let photo = await this.camera.takePictureAsync(this.options);
       const resized_image=await ImageManipulator.manipulateAsync(photo.uri,[{ resize: { width: 400, height: 400 } }],{ format: 'jpg',base64:true })
-      console.log(resized_image.uri)
 
-      let formData = new FormData();
-      formData.append('hand_roi', { uri: resized_image.uri, name: 'photo', type:'jpg' });
-      console.log(formData)
-      /*
      fetch("http://10.42.0.1:8000/read/",{
       method:"POST",
       headers: {'Content-Type':'application/x-www-form-urlencoded'}, // this line is important, if this content-type is not set it wont work
@@ -40,7 +35,7 @@ export default class App extends React.Component {
     })
     .then((res) => {return res.text();})
     .then((data) => { console.log(data); this.setState({word:data})});
-    */
+    
 
     }
   };

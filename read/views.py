@@ -46,7 +46,7 @@ def detect_sign():
         sign=prediction[0]
     else:
         sign="-1"
-    print(sign)
+    print(sign,prob)
     return sign,prob
 
 
@@ -60,6 +60,7 @@ def index(request):
             #decode image data
             hand_roi=request.POST['hand_roi']
             hand_roi=hand_roi.replace("data:image/png;base64,","")
+
             """ pad = len(hand_roi)%4
             hand_roi += "="*(4-pad)
             print(len(hand_roi)%4) """
@@ -78,11 +79,9 @@ def index(request):
             cv2.imwrite(UPLOADED_FILE_URL,orig_resized_gray)
 
             #detect sign
-            """
             sign,prob=detect_sign()
-            print(prob)
-            """
-            return HttpResponse("sign+str(prob)")
+            
+            return HttpResponse(sign)
 
         else:
             return HttpResponse("Method Not allowed!!")

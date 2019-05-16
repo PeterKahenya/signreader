@@ -20,13 +20,24 @@
                                 <div class="row" sstyle="height:30%;width: 100%">
                                                 <h3 id="status" style="color: #cfe3f8">Model ready for training</h3>
                                 </div>
-                                <div class="row card">Number of classes: {{ count }}</div>
-                                <div class="row card">Number of images: {{ total }}</div>
+                                <h2>Training Data</h2>
+                                <div class="row card">Number of classes: {{ t_no_of_classes }}</div>
+                                <div class="row card">Number of images: {{ t_total }}</div>
                                 <div class="row card">
-                                {% for entry in class_counts %}
+                                {% for entry in t_no_of_images_per_class %}
                                        {{entry}}
                                 {% endfor %}
                                 </div>
+                                <hr>
+                                <h2>Validation Data</h2>
+                                <div class="row card">Number of classes: {{ v_no_of_classes }}</div>
+                                <div class="row card">Number of images: {{ v_total }}</div>
+                                <div class="row card">
+                                {% for entry in v_no_of_images_per_class %}
+                                       {{entry}}
+                                {% endfor %}
+                                </div>
+                                <br>
                         <div class="row" sstyle="width: 100%">
 
                                 <button class="btn btn-outline-warning" onclick="train()">train</button>
@@ -40,6 +51,9 @@
 
 <script>
         function train() {
+                var statusbar=document.getElementById("status")
+                statusbar.innerHTML="Model training......."
+                statusbar.style="color:#008080;";
                 $.ajax({
                         method: 'POST',
                         url: '',
@@ -47,7 +61,6 @@
                                 csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val()
                         },
                         success:function uploaded(data){
-                                 var statusbar=document.getElementById("status")
                                  statusbar.innerHTML=data;
                                  statusbar.style="color:#0069d9;";
 
