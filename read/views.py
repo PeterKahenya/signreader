@@ -15,7 +15,7 @@ MODEL_DIR=os.path.join(WORK_DIR,"models")
 
 TRAIN_DIR=os.path.join(os.path.join(WORK_DIR,"images"),"train")
 PREDICT_DIR=os.path.join(os.path.join(WORK_DIR,"images"),"predict")
-IMAGE_DIM=400
+IMAGE_DIM=224
 
 #on-time setups
 if not os.path.exists(PREDICT_DIR):
