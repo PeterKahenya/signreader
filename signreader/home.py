@@ -6,5 +6,4 @@ def index(request):
     return render(request,"home.html",None,None)
 @csrf_exempt
 def api(request):
-    print(request.POST)
-    return HttpResponse("api response")
+    return render(request,"play.html",None,None)

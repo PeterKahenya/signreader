@@ -19,8 +19,10 @@
       <div class="row" sstyle="height:100%;width: 100%">
             <div class="col">
                 <div style="padding-left: 50px;padding-top: 10px;">
-                    <canvas width="800px" height="500px" id="output" style="background-color: transparent"></canvas>
-                    <button type="button" name="button" id="grab">Grab</button>
+                    <canvas width="800px" height="480px" id="output" style="background-color: transparent"></canvas>
+                    <button type="button" class="btn btn-primary" name="button" id="grab">Grab</button>
+                    <input type="file" id="uploadme" style="width: 1px;visibility: hidden;" />
+                    <input type="button" class="btn btn-warning" id="clickme" value="Upload" />
                 </div>
             </div>
             <div class="col" style="left: 20px;padding-top: 100px;">
@@ -33,13 +35,16 @@
                         <br>
                         <select name="data_choice" id="dataset_selection">
                             <option value="train">Training</option>
+                            
                             <option value="validate">Validation</option>
                         </select>
                         <br>
+                        
                         <br>
                         <input type="button" id="send" value="Add gesture" class="btn btn-primary">
                         <input type="button" id="delete" value="Delete" class="btn btn-outline-warning">
                     </form>
+                    <img src="" alt="" id="upl">
                 </div>
             </div>
         </div>
@@ -75,9 +80,28 @@
         var cap = new cv.VideoCapture(camera);//open up the camera stream
         var frame = new cv.Mat(camera.height, camera.width, cv.CV_8UC4);//current frame
         let roi_selected = false;
+        
+        document.getElementById('uploadme').onchange = function(e) {
+        var img = new Image();
+        img.src = URL.createObjectURL(this.files[0]);
+        img.onload = function draw() {
+            let mat = cv.imread(img);
+            cv.imshow(canvas, mat);
+            mat.delete();
+            frame_grabbed=true
+        };
+        img.onerror = failed;
+        };
+        function failed() {
+        console.error("The provided file couldn't be loaded as an Image media");
+        }
+        
 
-
-
+        $(function(){
+            $('#clickme').click(function(){
+                $('#uploadme').click();
+            });
+        });
 
 
         $(canvas).on('mousedown', function (e) {
