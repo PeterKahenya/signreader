@@ -36,7 +36,7 @@ def create_and_train_model(classes,classes_count,t_images_count,v_images_count,t
 
     #compile model using accuracy to measure model performance
     model.compile(optimizer=Adam(),loss='categorical_crossentropy',metrics=['accuracy'])
-    model.fit_generator(train_batch,steps_per_epoch=t_batches_per_epoch,validation_data=validate_batch,validation_steps=v_images_count,epochs=50,verbose=1)
+    model.fit_generator(train_batch,steps_per_epoch=t_batches_per_epoch,validation_data=validate_batch,validation_steps=v_images_count,epochs=10,verbose=1)
 
 
     #save trained model
