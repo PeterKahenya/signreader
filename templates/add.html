@@ -23,6 +23,7 @@
                     <button type="button" class="btn btn-primary" name="button" id="grab">Grab</button>
                     <input type="file" id="uploadme" style="width: 1px;visibility: hidden;" />
                     <input type="button" class="btn btn-warning" id="clickme" value="Upload" />
+                    <input type="button" class="btn btn-primary" id="timeout" value="Timeout" />
                 </div>
             </div>
             <div class="col" style="left: 20px;padding-top: 100px;">
@@ -103,7 +104,13 @@
             });
         });
 
-
+        $(function(){
+            $('#timeout').click(function(){
+                setInterval(function(){
+                    frame_grabbed=true;
+                },2000);
+            })
+        })
         $(canvas).on('mousedown', function (e) {
             last_mousex = parseInt(e.clientX - canvasx);
             last_mousey = parseInt(e.clientY - canvasy);
