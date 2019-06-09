@@ -123,13 +123,13 @@
                             success:function uploaded(data){
                                 if (data==="-1") {
                                     console.log(data)
-                                    setTimeout(send,2000);
+                                    setTimeout(send,1500);
                                 } else {
                                     if (responsive_loaded) {
                                         responsiveVoice.speak(data);
                                     }
                                     document.getElementById("prediction").innerHTML=data
-                                    setTimeout(send,2000);
+                                    setTimeout(send,1500);
                                 }
                             }
                             });

@@ -9,7 +9,7 @@
             <div class="navbar bg-dark">
                   <ul class="nav nav-pills nav-fill">
                         <li class="nav-item">
-                          <h4 style="color:#cccccc;"><a style="font-size: 30px;font-weight: bolder;text-decoration: none;" href="/">Sign Reader</a>|Add Gestures Here</h4>
+                          <h4 style="color:#cccccc;"><a style="font-size: 30px;font-weight: bolder;text-decoration: none;" href="/">Sign Reader</a>|Add Gestures Here |<strong style="color: #036433">{{r_total}} to go,({{pct}}%) done</strong></h4>
                         </li>
                   </ul>
                   <a href="/train" class="btn btn-outline-primary">Train</a>
@@ -24,6 +24,8 @@
                     <input type="file" id="uploadme" style="width: 1px;visibility: hidden;" />
                     <input type="button" class="btn btn-warning" id="clickme" value="Upload" />
                     <input type="button" class="btn btn-primary" id="timeout" value="Timeout" />
+                    <input type="button" class="btn btn-success" id="series" value="Series" />
+                    <input type="button" class="btn btn-success" id="stopseries" value="Stop Series" />
                 </div>
             </div>
             <div class="col" style="left: 20px;padding-top: 100px;">
@@ -68,6 +70,7 @@
         camera.setAttribute("width", canvas.width);//set width to match canvas
         camera.setAttribute("height", canvas.height);//set width to match canvas
         var frame_grabbed=false;
+        var series_interval=NaN;
 
         // Get a permission from user to use a camera.
         navigator.mediaDevices.getUserMedia({ video: true, audio: false })
@@ -96,7 +99,26 @@
         function failed() {
         console.error("The provided file couldn't be loaded as an Image media");
         }
+
+        $(function(){
+            $('#stopseries').click(function(){
+                clearInterval(series_interval)
+                location.reload()
+            })
+        })
         
+        $(function(){
+            $('#series').click(function(){
+            series_interval=setInterval((e)=>{
+                    frame_grabbed=true;
+                    send((data)=>{
+                        console.log(data)
+                        frame_grabbed=false
+                    })
+                },100);
+            });
+        });
+
 
         $(function(){
             $('#clickme').click(function(){
@@ -108,7 +130,7 @@
             $('#timeout').click(function(){
                 setInterval(function(){
                     frame_grabbed=true;
-                },2000);
+                },4000);
             })
         })
         $(canvas).on('mousedown', function (e) {
@@ -184,9 +206,8 @@
             setTimeout(captureFrame, delay);
         }
 
-
-         $("#send").on("click",(e)=>{
-             var img_data=null;
+        function send(callback) {
+            var img_data=null;
              if (frame_grabbed) {
                  img_data=output.toDataURL('image/jpg');
              } else {
@@ -194,15 +215,8 @@
              }
              var word=document.getElementById("word").value;
              var dataset=document.getElementById("dataset_selection").value;
-
-             console.log(JSON.stringify({
-                    hand_roi: img_data,
-                    word:word,
-                    dataset_choice:dataset,
-                    csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val()
-                }))
-
-             $.ajax({
+             if (word!=="") {
+                $.ajax({
                 method: 'POST',
                 url: '',
                 data: {
@@ -211,11 +225,21 @@
                     dataset_choice:dataset,
                     csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val()
                 },
-                success:function uploaded(data){
+                success:callback
+                });
+             } else {
+                 alert("No word entered")
+             }
+        }
+
+
+         $("#send").on("click",(e)=>{
+            
+                send(function uploaded(data){
                     console.log(data)
                     location.reload();
-                }
                 });
+                
 
 
              }
