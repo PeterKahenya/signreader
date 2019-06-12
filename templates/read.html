@@ -125,7 +125,7 @@
                                     console.log(data)
                                     setTimeout(send,1500);
                                 } else {
-                                    if (responsive_loaded) {
+                                    if (responsive_loaded && data!=="nothing" ) {
                                         responsiveVoice.speak(data);
                                     }
                                     document.getElementById("prediction").innerHTML=data
